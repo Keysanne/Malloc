@@ -1,25 +1,11 @@
-#include <stdlib.h>
-
-void free(void *ptr);
-void *malloc(size_t size);
-void *realloc(void *ptr, size_t size);
-
 allowed functions:
 	◦ mmap(2)
 	◦ munmap(2)
 	◦ getpagesize(2 or 3 depending on OS)
 	◦ getrlimit(2)
-	◦ The authorized functions within your libft (write(2) par exemple ;-) )
+	◦ The authorized functions within your libft (write(2) par exemple ;-)
 	◦ The functions from libpthread
 
 Submit also your folder libft including its own Makefile at the root of your repository. Your Makefile will have to compile the library, and then compile your project.
 
 You are allowed a global variable to manage your allocations and one for the threadsafe.
-
-Your Makefile will have to check the existence of the environment variable $HOSTTYPE. If it is empty or non-existant, to assign the following value:
-	‘uname -m‘_‘uname -s‘
-		ifeq ($(HOSTTYPE),)
-			HOSTTYPE := $(shell uname -m)_$(shell uname -s)
-		endif
-
-Your Makefile will have to create a symbolic link libft_malloc.so pointing to libft_malloc_$HOSTTYPE.so so for example: libft_malloc.so -> libft_malloc_intel-mac.so
