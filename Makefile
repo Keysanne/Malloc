@@ -5,6 +5,7 @@ OBJS=		${FILES:.c=.o}
 FILES=		malloc.c	\
 			free.c		\
 			realloc.c	\
+			utils.c		
 
 ifeq ($(HOSTTYPE),)
 	HOSTTYPE := $(shell uname -m)_$(shell uname -s)
