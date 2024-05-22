@@ -8,6 +8,9 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#define tiny 1000
+#define small 10000
+
 typedef struct  g_list
 {
     unsigned long   addr;
@@ -18,27 +21,23 @@ typedef struct  g_list
 
 typedef struct  g_malloc
 {
-    bool    init;
+    bool            init;
     
-    unsigned long   small_addr;
-    unsigned long   small_size;
+    void            *small_addr;
+    unsigned int    small_size;
 
-    unsigned long   tiny_addr;
-    unsigned long   tiny_size;
+    void            *tiny_addr;
+    unsigned int    tiny_size;
 
     t_list          *all_alloc;
 }               t_malloc;
-
-
-t_malloc    info =  /*GLOBAL*/
-{
-    .init = false,
-    .all_alloc = NULL,
-};
 
 void free(void *ptr);
 void *malloc(size_t size);
 void *realloc(void *ptr, size_t size);
 void show_alloc_mem();
+
+int    init_malloc();
+
 
 #endif
