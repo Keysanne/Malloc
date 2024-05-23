@@ -15,3 +15,6 @@ You are allowed a global variable to manage your allocations and one for the thr
 n = 1000   | N = 1032
 m = 10.000 | M = 10.032
 -> 32 bytes to align (determined by sizeof(max_align_t))
+
+
+try avec une nouvelle struct (addr_s  &  addr_e) de la taille du max d'alloc ?
