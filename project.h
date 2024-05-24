@@ -23,15 +23,18 @@ typedef struct  s_malloc
     unsigned int    tiny_size;
     int             tiny_alloc;
 
+    int             large_alloc;
 }               t_malloc;
 
-void free(void *ptr);
 void *malloc(size_t size);
+void free(void *ptr);
 void *realloc(void *ptr, size_t size);
 void show_alloc_mem();
 
-int    init_malloc();
+int     init_malloc();
 void    *tiny_alloc(size_t size);
+void    *large_alloc(size_t size);
+void    *small_alloc(size_t size);
 
 
 #endif

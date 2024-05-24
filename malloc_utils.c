@@ -24,6 +24,8 @@ void    *tiny_alloc(size_t size)
 {
     void    *addr;
     addr = info.tiny_addr;
+    if(info.tiny_alloc == 100)
+        return NULL;
     for (int i = 0; i < (tiny + sizeof(max_align_t)) * info.tiny_alloc; i++)
         addr++;
     while ((unsigned long int)addr % sizeof(max_align_t) != 0)
@@ -34,10 +36,23 @@ void    *tiny_alloc(size_t size)
 
 void    *small_alloc(size_t size)
 {
-
+    void    *addr;
+    addr = info.small_addr;
+    if(info.small_alloc == 100)
+        return NULL;
+    for (int i = 0; i < (tiny + sizeof(max_align_t)) * info.small_alloc; i++)
+        addr++;
+    while ((unsigned long int)addr % sizeof(max_align_t) != 0)
+        addr++;
+    info.small_alloc++;
+    return addr;
 }
 
 void    *large_alloc(size_t size)
 {
-
+    void    *addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (addr == MAP_FAILED)
+        return NULL;
+    info.large_alloc++;
+    return addr;
 }
