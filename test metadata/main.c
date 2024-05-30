@@ -49,10 +49,13 @@ void*   findSpace(int size)
         return my_heap;
     while(list)
     {
-        jump(&my_heap, list->size + sizeof(BlockHeader));
+        if ((unsigned long int)list->addr - (unsigned long int)my_heap > size + sizeof(BlockHeader))
+            break;
+        my_heap = list->addr;
+        jump(&my_heap, list->size);
         list = list->next;
     }
-    if ((unsigned long int)my_heap < (unsigned long int)memoryPool + POOL_SIZE)
+    if ((unsigned long int)my_heap + size + sizeof(BlockHeader) < (unsigned long int)memoryPool + POOL_SIZE)
         return my_heap;
     return NULL;
 }
@@ -66,14 +69,17 @@ void* customMalloc(size_t requestedSize)
 
     if (addr == NULL)
         return NULL;
-    while(last->next)
+    while((unsigned long int)last->addr < (unsigned long int)addr && last->next)
         last = last->next;
     BlockHeader* newBlock = (BlockHeader*)((char*)addr + totalSize);
-    last->next = newBlock;
     newBlock->size = requestedSize;
     newBlock->previous = last;
     newBlock->addr = addr + sizeof(BlockHeader);
-    newBlock->next = NULL;
+    if (last->next != NULL)
+        newBlock->next = last->next;
+    else
+        newBlock->next = NULL;
+    last->next = newBlock;
     current->size -= totalSize;
     return addr + sizeof(BlockHeader);
 }
@@ -98,7 +104,7 @@ void customFree(void* ptr)
     bzero(ptr, list->size + sizeof(BlockHeader));
 }
 
-void    show_the_metadata(void *ptr)
+void    show_the_metadata(void *ptr) // cest nul
 {
     BlockHeader *test = (BlockHeader *)((char*)ptr - sizeof(BlockHeader));
     test = test->next;
@@ -127,11 +133,31 @@ int main()
 
     customFree(addr);
     customFree(addr2);
-    customFree(addr3);
+    // customFree(addr3);
 
-    printf("--------------\n");
+    addr = customMalloc(100);
+    addr2 = customMalloc(50);
+    
+    printf("------------\n");
+
+     printf("1\n");
+    printf("%lx  -  %lx\n", (unsigned long int)addr, (unsigned long int)addr + 100);
+    show_the_metadata(addr);
+    printf("2\n");
+    printf("%lx  -  %lx\n", (unsigned long int)addr2, (unsigned long int)addr2 + 50);
+    show_the_metadata(addr2);
+    printf("3\n");
+    printf("%lx  -  %lx\n", (unsigned long int)addr3, (unsigned long int)addr3 + 300);
+    show_the_metadata(addr3);
+
+    printf("------------\n");
+
     BlockHeader *test = (BlockHeader *)memoryPool;
-    printf("%ld\n", test->size);
+    while(test)
+    {
+        printf("%ld\n", test->size);
+        test = test->next;
+    }
 
     
     if (munmap(memoryPool, POOL_SIZE) == -1)
