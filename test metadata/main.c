@@ -4,42 +4,44 @@
 #include <sys/mman.h>
 #include <string.h>
 
-typedef struct  BlockHeader
+typedef struct  Metadata
 {
     size_t              size;
     void*               addr;
-    struct BlockHeader* next;
-    struct BlockHeader* previous;
-}               BlockHeader;
+    struct Metadata* 	next;
+    struct Metadata* 	previous;
+}               Metadata;
 
 #define POOL_SIZE 1000000
 
 void* memoryPool;
 
-void initializeMemoryPool()
+void *initializeMemoryPool(int size)
 {
-    memoryPool = mmap(NULL, POOL_SIZE + sizeof(BlockHeader), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (memoryPool == MAP_FAILED)
+    void* ptr = mmap(NULL, size + sizeof(Metadata), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (ptr == MAP_FAILED)
     {
-        perror("Failed to allocate memory pool");
+        printf("Failed to allocate memory pool");
         exit(1);
     }
-    BlockHeader* header = (BlockHeader*)memoryPool;
-    header->size		= POOL_SIZE;
-    header->addr        = memoryPool;
+    Metadata* header = (Metadata*)ptr;
+    header->size		= size;
+    header->addr        = ptr;
     header->next        = NULL;
     header->previous    = NULL;
+	return ptr;
 }
 
-void    jump(void** addr, int nbOfJump)
+void    *jump(void* addr, int nbOfJump)
 {
     for (int i = 0; i < nbOfJump; i++ )
-            (*addr)++;
+		addr++;
+	return addr;
 }
 
-void*   findSpace(int size)
+void   *findSpace(int size, void* ptr, int zone_size)
 {
-    BlockHeader *list = (BlockHeader*)memoryPool;
+    Metadata *list = (Metadata*)ptr;
     void        *my_heap = list->addr;
 
     if (list->size < size)
@@ -47,48 +49,46 @@ void*   findSpace(int size)
     list = list->next;
     if (list == NULL)
         return my_heap;
-    while(list)
+    for( ; list; list = list->next)
     {
-        if ((unsigned long int)list->addr - (unsigned long int)my_heap > size + sizeof(BlockHeader))
+        if ((unsigned long int)list->addr - (unsigned long int)my_heap > size + sizeof(Metadata))
             break;
-        my_heap = list->addr;
-        jump(&my_heap, list->size);
-        list = list->next;
+        my_heap = jump(list->addr, list->size);
     }
-    if ((unsigned long int)my_heap + size + sizeof(BlockHeader) < (unsigned long int)memoryPool + POOL_SIZE)
+    if ((unsigned long int)my_heap + size + sizeof(Metadata) < (unsigned long int)ptr + zone_size)
         return my_heap;
     return NULL;
 }
 
-void* customMalloc(size_t requestedSize)
+void *customMalloc(size_t requestedSize, void* ptr, int zone_size)
 {
-    BlockHeader*    current = (BlockHeader*)memoryPool;
-    BlockHeader*    last = (BlockHeader*)memoryPool;
-    size_t          totalSize = sizeof(BlockHeader) + requestedSize;
-    void*           addr = findSpace(totalSize);
+    Metadata*    current = (Metadata*)ptr;
+    Metadata*    last = (Metadata*)ptr;
+    size_t          totalSize = sizeof(Metadata) + requestedSize;
+    void*           addr = findSpace(totalSize, ptr, zone_size);
 
     if (addr == NULL)
         return NULL;
     while((unsigned long int)last->addr < (unsigned long int)addr && last->next)
         last = last->next;
-    BlockHeader* newBlock = (BlockHeader*)((char*)addr + totalSize);
+    Metadata* newBlock = (Metadata*)((char*)addr + totalSize);
     newBlock->size = requestedSize;
     newBlock->previous = last;
-    newBlock->addr = addr + sizeof(BlockHeader);
+    newBlock->addr = addr + sizeof(Metadata);
     if (last->next != NULL)
         newBlock->next = last->next;
     else
         newBlock->next = NULL;
     last->next = newBlock;
     current->size -= totalSize;
-    return addr + sizeof(BlockHeader);
+    return addr + sizeof(Metadata);
 }
 
-void customFree(void* ptr)
+void customFree(void* ptr, void* zone)
 {
     if (ptr == NULL)
         return;
-    BlockHeader *list = (BlockHeader *)memoryPool;
+    Metadata *list = (Metadata *)zone;
     while(list->addr != ptr && list)
         list = list->next;
     if(list->addr != ptr)
@@ -99,66 +99,79 @@ void customFree(void* ptr)
     list->previous->next = list->next;
     if (list->next != NULL)
         list->next->previous = list->previous;
-    BlockHeader *pool = (BlockHeader *)memoryPool;
-    pool->size += list->size + sizeof(BlockHeader);
-    bzero(ptr, list->size + sizeof(BlockHeader));
+    Metadata *pool = (Metadata *)zone;
+    pool->size += list->size + sizeof(Metadata);
+    bzero(ptr, list->size + sizeof(Metadata));
 }
 
-void    show_the_metadata(void *ptr) // cest nul
+void    show_the_metadata(void *ptr, void* zone)
 {
-    BlockHeader *test = (BlockHeader *)((char*)ptr - sizeof(BlockHeader));
-    test = test->next;
-    printf("size: %ld\n", test->size);
+    Metadata *list = (Metadata *)zone;
+	while(list)
+	{
+		if ((unsigned long int)list->addr == (unsigned long int)ptr)
+			break;
+	    list = list->next;
+	}
+	if (!list)
+	{
+		printf("This address '%p' isn't allocated\n", ptr);
+		return ;
+	}
+    printf("size: %ld\n", list->size);
 }
 
 int main()
 {
-    initializeMemoryPool();
+    memoryPool = initializeMemoryPool(POOL_SIZE);
     printf("Memorypool -> %p\n\n", memoryPool);
     
-    void*   addr = customMalloc(100);
-    void*   addr2 = customMalloc(50);
-    void*   addr3 = customMalloc(300);
+    void*   addr = customMalloc(100, memoryPool, POOL_SIZE);
+    void*   addr2 = customMalloc(50, memoryPool, POOL_SIZE);
+    void*   addr3 = customMalloc(300, memoryPool, POOL_SIZE);
 
 
     printf("1\n");
     printf("%lx  -  %lx\n", (unsigned long int)addr, (unsigned long int)addr + 100);
-    show_the_metadata(addr);
+    show_the_metadata(addr, memoryPool);
     printf("2\n");
     printf("%lx  -  %lx\n", (unsigned long int)addr2, (unsigned long int)addr2 + 50);
-    show_the_metadata(addr2);
+    show_the_metadata(addr2, memoryPool);
     printf("3\n");
     printf("%lx  -  %lx\n", (unsigned long int)addr3, (unsigned long int)addr3 + 300);
-    show_the_metadata(addr3);
+    show_the_metadata(addr3, memoryPool);
 
-    customFree(addr);
-    customFree(addr2);
+    customFree(addr, memoryPool);
+    customFree(addr2, memoryPool);
     // customFree(addr3);
 
-    addr = customMalloc(100);
-    addr2 = customMalloc(50);
+    addr = customMalloc(100, memoryPool, POOL_SIZE);
+    addr2 = customMalloc(50, memoryPool, POOL_SIZE);
     
     printf("------------\n");
 
      printf("1\n");
     printf("%lx  -  %lx\n", (unsigned long int)addr, (unsigned long int)addr + 100);
-    show_the_metadata(addr);
+    show_the_metadata(addr, memoryPool);
     printf("2\n");
     printf("%lx  -  %lx\n", (unsigned long int)addr2, (unsigned long int)addr2 + 50);
-    show_the_metadata(addr2);
+    show_the_metadata(addr2, memoryPool);
     printf("3\n");
     printf("%lx  -  %lx\n", (unsigned long int)addr3, (unsigned long int)addr3 + 300);
-    show_the_metadata(addr3);
+    show_the_metadata(addr3, memoryPool);
 
     printf("------------\n");
 
-    BlockHeader *test = (BlockHeader *)memoryPool;
+    customFree(addr, memoryPool);
+    customFree(addr2, memoryPool);
+	customFree(addr3, memoryPool);
+    
+	Metadata *test = (Metadata *)memoryPool;
     while(test)
     {
         printf("%ld\n", test->size);
         test = test->next;
     }
-
     
     if (munmap(memoryPool, POOL_SIZE) == -1)
     {

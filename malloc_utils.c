@@ -1,58 +1,57 @@
 #include "project.h"
 
-extern t_malloc    info;
+extern s_malloc    info;
 
-int    init_malloc()
+void *initializeMemoryPool(int size)
 {
-    void    *addr = mmap(NULL, (small + sizeof(max_align_t)) * 100, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (addr == MAP_FAILED)
-        return 1;
-    info.small_addr = addr;
-    info.small_size = (small + sizeof(max_align_t)) * 100;
-    info.small_alloc = 0;
-    addr = mmap(NULL, (tiny + sizeof(max_align_t)) * 100, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (addr == MAP_FAILED)
-        return 1;
-    info.tiny_addr = addr;
-    info.tiny_size = (tiny + sizeof(max_align_t)) * 100;
-    info.tiny_alloc = 0;
-    info.init = true;
-    return 0;
+    void* ptr = mmap(NULL, size + sizeof(Metadata), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (ptr == MAP_FAILED)
+    {
+        printf("Failed to allocate memory pool");
+		if (size == small)
+			munmap(info._tiny, pool_tiny);
+        exit(1);
+    }
+    Metadata* header = (Metadata*)ptr;
+    header->size		= size;
+    header->addr        = ptr;
+    header->next        = NULL;
+    header->previous    = NULL;
+	return ptr;
 }
 
-void    *tiny_alloc(size_t size)
+int	init_malloc()
 {
-    void    *addr;
-    addr = info.tiny_addr;
-    if(info.tiny_alloc == 100)
-        return NULL;
-    for (int i = 0; i < (tiny + sizeof(max_align_t)) * info.tiny_alloc; i++)
-        addr++;
-    while ((unsigned long int)addr % sizeof(max_align_t) != 0)
-        addr++;
-    info.tiny_alloc++;
-    return addr;
+	info._tiny =  initializeMemoryPool(pool_tiny);
+	info._small = initializeMemoryPool(pool_small);
+	info.init = true;
+	return 0;
 }
 
-void    *small_alloc(size_t size)
+void    *jump(void* addr, int nbOfJump)
 {
-    void    *addr;
-    addr = info.small_addr;
-    if(info.small_alloc == 100)
-        return NULL;
-    for (int i = 0; i < (tiny + sizeof(max_align_t)) * info.small_alloc; i++)
-        addr++;
-    while ((unsigned long int)addr % sizeof(max_align_t) != 0)
-        addr++;
-    info.small_alloc++;
-    return addr;
+    for (int i = 0; i < nbOfJump; i++ )
+		addr++;
+	return addr;
 }
 
-void    *large_alloc(size_t size)
+void   *findSpace(int size, void* zone, int zone_size)
 {
-    void    *addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (addr == MAP_FAILED)
+    Metadata *list = (Metadata*) zone;
+    void        *my_heap = list->addr;
+
+    if (list->size < size)
         return NULL;
-    info.large_alloc++;
-    return addr;
+    list = list->next;
+    if (list == NULL)
+        return my_heap;
+    for( ; list; list = list->next)
+    {
+        if ((unsigned long int)list->addr - (unsigned long int)my_heap > size + sizeof(Metadata))
+            break;
+        my_heap = jump(list->addr, list->size);
+    }
+    if ((unsigned long int)my_heap + size + sizeof(Metadata) < (unsigned long int)zone + zone_size)
+        return my_heap;
+    return NULL;
 }

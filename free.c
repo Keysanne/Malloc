@@ -1,28 +1,28 @@
 #include "project.h"
 
-extern t_malloc    info;
+extern s_malloc    info;
 
-void large_free(void *ptr)
+void customFree(void* ptr, void* zone)
 {
-    munmap(ptr, 10/*size matter*/);
-    info.large_alloc--;
+    if (ptr == NULL)
+        return;
+    Metadata *list = (Metadata *)zone;
+    while(list->addr != ptr && list)
+        list = list->next;
+    if(list->addr != ptr)
+    {
+        printf("invalid free\n");
+        exit(1);
+    }
+    list->previous->next = list->next;
+    if (list->next != NULL)
+        list->next->previous = list->previous;
+    Metadata *pool = (Metadata *)zone;
+    pool->size += list->size + sizeof(Metadata);
+    bzero(ptr, list->size + sizeof(Metadata));
 }
 
-void free(void *ptr)
+void ft_free(void *ptr)
 {
-    if (size <= tiny)
-        info.tiny_alloc--;
-    else if (size <= small)
-        info.small_alloc--;
-    else
-        large_free(ptr);
-    if (info.tiny_alloc == 0 && info.small_alloc == 0 && info.large_alloc == 0)
-    {
-        info.init = false;
-        if (munmap(info.tiny_addr, info.tiny_size) == -1)
-            printf("error munmap\n");
-        if (munmap(info.small_addr, info.small_size) == -1)
-            printf("error munmap\n");
-    }
-    return addr;
+	//find the zone (small, tiny)
 }

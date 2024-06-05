@@ -3,38 +3,41 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <stdbool.h>
 
-#define tiny 1000
-#define small 10000
+#define tiny 		1000
+#define pool_tiny 	100000
+#define small 		10000
+#define pool_small 	1000000
+
+
+typedef struct  Metadata
+{
+    size_t              size;
+    void*               addr;
+    struct Metadata* 	next;
+    struct Metadata* 	previous;
+}               Metadata;
 
 typedef struct  s_malloc
 {
-    bool            init;
-    
-    void            *small_addr;
-    unsigned int    small_size;
-    int             small_alloc;
+    bool    init;
 
-    void            *tiny_addr;
-    unsigned int    tiny_size;
-    int             tiny_alloc;
+	void*	_tiny;
+	void*	_small;
+	void*	_large;
+}               s_malloc;
 
-    int             large_alloc;
-}               t_malloc;
+void	*ft_malloc(size_t size);
+void	ft_free(void *ptr);
+void	*ft_realloc(void *ptr, size_t size);
+void 	show_alloc_mem();
 
-void *malloc(size_t size);
-void free(void *ptr);
-void *realloc(void *ptr, size_t size);
-void show_alloc_mem();
-
-int     init_malloc();
-void    *tiny_alloc(size_t size);
-void    *large_alloc(size_t size);
-void    *small_alloc(size_t size);
-
+int		init_malloc();
+void	*findSpace(int size, void* zone, int zone_size);
 
 #endif
