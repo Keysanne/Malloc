@@ -174,9 +174,6 @@ int main()
     }
     
     if (munmap(memoryPool, POOL_SIZE) == -1)
-    {
         perror("Failed to unmap memory pool");
-        exit(EXIT_FAILURE);
-    }
     return 0;
 }
