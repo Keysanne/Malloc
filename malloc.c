@@ -27,7 +27,7 @@ void *customMalloc(size_t requestedSize, void* ptr, int zone_size)
 {
     Metadata*    	current 	= ptr, *last = ptr;
     size_t          totalSize 	= sizeof(Metadata) + requestedSize;
-    void*           addr 		= findSpace(totalSize, ptr, zone_size);
+    void*           addr 		= find_space(totalSize, ptr, zone_size);
 
     if (addr == NULL)
         return NULL;
@@ -48,7 +48,7 @@ void *customMalloc(size_t requestedSize, void* ptr, int zone_size)
     return addr + sizeof(Metadata);
 }
 
-static void    *malloc(size_t size)
+void    *malloc(size_t size)
 {
     void    *addr;
 
@@ -62,18 +62,4 @@ static void    *malloc(size_t size)
     else
         addr = large_alloc(size);
     return addr;
-}
-
-int main()
-{
-    char *test, *test1, *test2;
-
-    test  = malloc(100);
-    test1 = malloc(500);
-    test2 = malloc(10);
-
-	show_alloc_mem();
-
-
-    return 0;
 }

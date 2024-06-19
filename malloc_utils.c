@@ -43,7 +43,7 @@ void    *jump(void* addr, int nbOfJump)
 	return addr;
 }
 
-void   *findSpace(int size, void* zone, int zone_size)
+void   *find_space(int size, void* zone, int zone_size)
 {
     Metadata*	list 	= zone;
     void*		my_heap = list->addr;

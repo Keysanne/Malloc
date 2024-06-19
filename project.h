@@ -14,6 +14,13 @@
 #define pool_small 	1000000
 
 
+typedef enum	type
+{
+	TINY,
+	SMALL,
+	LARGE
+}				type_zone;
+
 typedef struct  Metadata
 {
     size_t              size;
@@ -32,12 +39,13 @@ typedef struct  s_malloc
 	void*	_large;
 }               s_malloc;
 
-static void	*malloc(size_t size);
-void		ft_free(void *ptr);
-void		*ft_realloc(void *ptr, size_t size);
-void 		show_alloc_mem();
+void	*malloc(size_t size);
+void	free(void *ptr);
+void	*realloc(void *ptr, size_t size);
+void 	show_alloc_mem();
 
-int		init_malloc();
-void	*findSpace(int size, void* zone, int zone_size);
+int			init_malloc();
+type_zone	find_zone(void* ptr);
+void		*find_space(int size, void* zone, int zone_size);
 
 #endif

@@ -6,7 +6,8 @@ FILES=		malloc.c		\
 			free.c			\
 			realloc.c		\
 			malloc_utils.c	\
-			show_alloc_mem.c			
+			show_alloc_mem.c\
+			main.c		
 
 ifeq ($(HOSTTYPE),)
 	HOSTTYPE := $(shell uname -m)_$(shell uname -s)

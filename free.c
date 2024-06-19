@@ -12,11 +12,6 @@ void customFree(void* ptr, void* zone)
     
 	while(list->addr != ptr && list)
         list = list->next;
-    if(list->addr != ptr)
-    {
-        printf("invalid free\n");
-        return;
-    }
     list->previous->next = list->next;
     if (list->next != NULL)
         list->next->previous = list->previous;
@@ -24,8 +19,41 @@ void customFree(void* ptr, void* zone)
     bzero(ptr, list->size + sizeof(Metadata));
 }
 
-void ft_free(void *ptr)
+type_zone	find_zone(void* ptr)
 {
-	//find the zone (small, tiny)
-	return ;
+	Metadata	*list;
+	void	*tab[] = {info._tiny, info._small, info._large};
+
+	for(int i = 0; i < 3; i++)
+	{
+		list = tab[i];
+		for(list = list->next; list; list = list->next)
+			if (list->addr == ptr)
+				return i;
+	}
+	return -1;
+}
+
+void free(void *ptr)
+{
+	type_zone type;
+
+	type = find_zone(ptr);
+	if (type == -1)
+	{
+		printf("invalid free\n");
+		return;
+	}
+	switch (type)
+	{
+        case TINY:
+			customFree(ptr, info._tiny);
+			break;
+        case SMALL:
+			customFree(ptr, info._small);
+			break;
+        case LARGE:
+			customFree(ptr, info._large);
+			break;
+    }
 }
