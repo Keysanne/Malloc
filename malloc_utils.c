@@ -1,4 +1,5 @@
 #include "project.h"
+#include <stdint.h>
 
 extern s_malloc    info;
 
@@ -43,6 +44,13 @@ void    *jump(void* addr, int nbOfJump)
 	return addr;
 }
 
+void	*align(void *addr)
+{
+	uintptr_t raw_address = (uintptr_t)addr;
+    uintptr_t aligned = (raw_address + 8 - 1) & ~(8 - 1);
+	return (void*)aligned;
+}
+
 void   *find_space(int size, void* zone, int zone_size)
 {
     Metadata*	list 	= zone;
@@ -52,14 +60,14 @@ void   *find_space(int size, void* zone, int zone_size)
         return NULL;
     list = list->next;
     if (list == NULL)
-        return my_heap;
+        return align(my_heap);
     for( ; list; list = list->next)
     {
-        if ((unsigned long int)list->addr - (unsigned long int)my_heap > size + sizeof(Metadata))
+        if ((unsigned long int)list->addr - (unsigned long int)my_heap > size + sizeof(Metadata) + 8)
             break;
         my_heap = jump(list->addr, list->size);
     }
     if ((unsigned long int)my_heap + size + sizeof(Metadata) < (unsigned long int)zone + zone_size)
-        return my_heap;
+        return align(my_heap); // here
     return NULL;
 }
