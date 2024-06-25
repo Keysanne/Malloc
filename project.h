@@ -2,16 +2,14 @@
 # define PROJECT_H
 
 #include <stddef.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <stdbool.h>
 
-#define tiny 		1000
-#define pool_tiny 	100000
-#define small 		10000
-#define pool_small 	1000000
+#define tiny 		4096
+#define pool_tiny 	409600
+#define small 		40960
+#define pool_small 	4096000
 
 
 typedef enum	type
@@ -31,8 +29,8 @@ typedef struct  Metadata
 
 typedef struct  s_malloc
 {
-    bool    init;
-	unsigned long int total;
+    bool    			init;
+	unsigned long int 	total;
 
 	void*	_tiny;
 	void*	_small;
@@ -47,5 +45,10 @@ void 	show_alloc_mem();
 int			init_malloc();
 type_zone	find_zone(void* ptr);
 void		*find_space(int size, void* zone, int zone_size);
+
+
+void printint(int nb);
+void printadress(unsigned long int ptr);
+
 
 #endif

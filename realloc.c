@@ -17,7 +17,7 @@ void	*right_zone(int type)
 {
 	if (type == -1)
 	{
-		printf("invalid pointer\n");
+		write(1, "invalid pointer\n", 16);
 		return NULL;
 	}
 	switch (type)
@@ -28,7 +28,7 @@ void	*right_zone(int type)
 			return info._small;
 		case LARGE:
 			return info._large;
-	}	
+	}
 	return NULL;
 }
 

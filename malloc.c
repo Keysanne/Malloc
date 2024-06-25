@@ -31,9 +31,9 @@ void *customMalloc(size_t requestedSize, void* ptr, int zone_size)
 
     if (addr == NULL)
         return NULL;
-    while((unsigned long int)last->addr < (unsigned long int)addr && last->next)
-        last = last->next;
-    
+    for(;last->next; last = last->next)
+		if((unsigned long int)last->next->addr > (unsigned long int)addr)
+			break;
 	Metadata*	newBlock 	= (Metadata*)((char*)addr + totalSize);
 
     newBlock->size 		= requestedSize;

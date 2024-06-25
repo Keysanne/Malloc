@@ -50,7 +50,6 @@ void	*align(void *addr)
     uintptr_t aligned = (raw_address + 8 - 1) & ~(8 - 1);
 	return (void*)aligned;
 }
-
 void   *find_space(int size, void* zone, int zone_size)
 {
     Metadata*	list 	= zone;
@@ -68,6 +67,6 @@ void   *find_space(int size, void* zone, int zone_size)
         my_heap = jump(list->addr, list->size);
     }
     if ((unsigned long int)my_heap + size + sizeof(Metadata) < (unsigned long int)zone + zone_size)
-        return align(my_heap); // here
+        return align(my_heap);
     return NULL;
 }
