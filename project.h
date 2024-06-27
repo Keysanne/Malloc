@@ -42,13 +42,9 @@ void	free(void *ptr);
 void	*realloc(void *ptr, size_t size);
 void 	show_alloc_mem();
 
+
 int			init_malloc();
 type_zone	find_zone(void* ptr);
 void		*find_space(int size, void* zone, int zone_size);
-
-
-void printint(int nb);
-void printadress(unsigned long int ptr);
-
 
 #endif

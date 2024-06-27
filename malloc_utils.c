@@ -50,6 +50,7 @@ void	*align(void *addr)
     uintptr_t aligned = (raw_address + 8 - 1) & ~(8 - 1);
 	return (void*)aligned;
 }
+
 void   *find_space(int size, void* zone, int zone_size)
 {
     Metadata*	list 	= zone;

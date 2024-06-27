@@ -24,9 +24,16 @@ ${OBJS}: ${FILES}
 
 clean:
 		rm -f ${OBJS}
+		make clean -C libft_malloc
 
 fclean: clean
-		rm -f ${LIB}
+		rm -f ${LIB} libft raw
 		unlink $(LINK)
+		make fclean -C libft_malloc
+
+test:
+	make -C libft_malloc
+	gcc main_libft.c libft_malloc/libft -o libft
+	gcc main_raw.c libft_malloc.so -o raw
 
 re: fclean all
