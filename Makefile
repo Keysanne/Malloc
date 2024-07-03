@@ -16,11 +16,11 @@ all: ${LIB}
 
 ${LIB}: ${OBJS}
 		ar rc ${LIB} ${OBJS}
-		ln -s $(LIB) $(LINK)
+		ln -sf $(LIB) $(LINK)
 		ranlib ${LIB}
 
-${OBJS}: ${FILES}
-		${COMPILER} -c ${FILES}
+%.o:	%.c
+		$(COMPILER) -c $< -o $@
 
 clean:
 		rm -f ${OBJS}
